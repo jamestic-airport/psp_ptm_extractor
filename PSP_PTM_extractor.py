@@ -14,8 +14,10 @@ html = response.content
 
 # Parse the HTML content using BeautifulSoup
 soup = BeautifulSoup(html, "html.parser")
-print(soup.prettify())
-# PTMS are stored in the div class 'data container' under the param id 'PTMsites'
+
+# PTMS are stored in the div class 'data container' under the param id 'PTMsites'. Extract PMT information
+# into a list of dicts
+print(soup)
 ptms_param = soup.find('param', id = 'PTMsites')
 
 if ptms_param:
@@ -24,6 +26,13 @@ if ptms_param:
 else:
     print('No PTMS for this ribosomal protein.')
     exit(5)
+
+# Cleaning up NMER string from 'EKVKVNG<font color=#993333>k</font>TGNLGNV' to 'EKVKVNGkTGNLGNV'
+for fields in ptms:
+    nmer_string = fields.get('NMER')
+    new_string = nmer_string.replace("<font color=#993333>", "").replace("</font>", "")
+    fields['NMER'] = new_string
+
 
 # Headers are 'HTP', 'ID', 'LTP', 'MODCOLOR', 'MODIFICATION', 'NMER', 'POS', 'PUBMED', 'REF', 'allNum'
 headers = ['MODIFICATION', 'ID', 'NMER', 'REF', 'HTP', 'LTP', 'PUBMED', 'allNum']
@@ -35,8 +44,6 @@ with open('output.tsv', 'w', newline='') as file:
     for row in ptms: # Write each dictionary in the list to a row in the file
         writer.writerow({key: value for key, value in row.items() if key in headers})
 file.close()
-
-
 
 
 
